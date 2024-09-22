@@ -1,0 +1,56 @@
+services:
+  keycloak-db:
+    image: postgres:16.2
+    container_name: keycloak_db
+    restart: always
+    ports:
+      - "6541:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 10240M
+
+  app-db:
+    image: postgres:16.2
+    container_name: app_db
+    restart: always
+    ports:
+      - "6542:5432"
+    environment:
+      - POSTGRES_DB=${APP_DB}
+      - POSTGRES_USER=${APP_DB_USER}
+      - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
+    volumes:
+      - appdata:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 10240M
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.0
+    container_name: keycloak
+    command: start-dev
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-db
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      - keycloak-db
+    ports:
+      - 8080:8080
+    restart: always
+
+volumes:
+  postgresdata:
+  appdata:
